@@ -15,6 +15,8 @@ Two datasets (SPNLG and Wiki) can be downloaded from: https://drive.google.com/d
 
 Details info: [HERE](./data/README.md)
 
+https://gitlab.com/shimorina/webnlg-dataset/-/tree/master/
+
 - **Training**:
 
 ```
