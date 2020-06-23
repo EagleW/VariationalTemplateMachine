@@ -12,8 +12,8 @@ def make_masks(src, pad_idx, max_pool=False):
     """
     neginf = -1e38
     bsz, nfields, nfeats = src.size()
-    fieldmask = (src.eq(pad_idx).sum(2) == nfeats) # binary bsz x nfields tensor
-    avgmask = (1 - fieldmask).float() # 1s where not padding
+    fieldmask = (src.eq(pad_idx).sum(2) == nfeats).float() # binary bsz x nfields tensor
+    avgmask = (1 - fieldmask) # 1s where not padding
     if not max_pool:
         avgmask.div_(avgmask.sum(1, True).expand(bsz, nfields))
     fieldmask = fieldmask.float() * neginf # 0 where not all pad and -1e38 elsewhere
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             args.cuda = False
 
     # data loader
-    if 'wiki' in args.data.lower():
+    if 'webnlg' in args.data.lower():
         corpus = label_wiki.Corpus(args.data, args.bsz, max_count=args.max_vocab_cnt,
                                    add_bos=False, add_eos=False)
     elif 'spnlg' in args.data.lower():
@@ -104,6 +104,7 @@ if __name__ == "__main__":
         net = variational_template_machine.VariationalTemplateMachine(corpus, args)
     if args.cuda:
         net = net.cuda()
+    print('Finish loading')
 
     def generation(test_out, num=3):
         output_fn = open(test_out, 'w')
