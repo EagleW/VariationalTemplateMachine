@@ -10,9 +10,9 @@ def process_src(triples, majority):
     # count = 2+ str(count) 
     for h, r, t in triples:
         if h != majority:
-            src += h + '_' + r + ':' + t
+            src += h + '_' + r + ':' + t + '\t'
         else:
-            src += r + ':' + t
+            src += r + ':' + t + '\t'
         # count += 1
     return src
 
