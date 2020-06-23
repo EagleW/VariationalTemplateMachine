@@ -32,11 +32,10 @@ class Tripleset:
 
 class Lexicalisation:
 
-    def __init__(self, lex, lid, comment='', lang=''):
+    def __init__(self, lex, lid, comment=''):
         self.lex = lex
         self.id = lid
         self.comment = comment
-        self.lang = lang
 
     def chars_length(self):
         return len(self.lex)
@@ -44,17 +43,13 @@ class Lexicalisation:
 
 class Entry:
 
-    def __init__(self, category, size, eid, shape, shape_type):
+    def __init__(self, category, size, eid):
         self.category = category
         self.size = size
         self.id = eid
-        self.shape = shape
-        self.shape_type = shape_type
         self.originaltripleset = []
         self.modifiedtripleset = Tripleset()
         self.lexs = []
-        self.dbpedialinks = []
-        self.links = []
 
     def fill_originaltriple(self, xml_t):
         otripleset = Tripleset()
@@ -69,25 +64,9 @@ class Entry:
             comment = xml_lex.attrib['comment']
         except KeyError:
             comment = ''
-        try:
-            lang = xml_lex.attrib['lang']
-        except KeyError:
-            lang = ''
         lid = xml_lex.attrib['lid']
-        lex = Lexicalisation(xml_lex.text, lid, comment, lang)
+        lex = Lexicalisation(xml_lex.text, lid, comment)
         self.lexs.append(lex)
-
-    def create_dbpedialinks(self, xml_dbpedialinks):
-        for xml_dblink in xml_dbpedialinks:
-            s, p, o = xml_dblink.text.split(' | ')
-            dbp_link = Triple(s, p, o)
-            self.dbpedialinks.append(dbp_link)
-
-    def create_links(self, xml_links):
-        for xml_link in xml_links:
-            s, p, o = xml_link.text.split(' | ')
-            link = Triple(s, p, o)
-            self.links.append(link)
 
     def count_lexs(self):
         return len(self.lexs)
@@ -147,10 +126,8 @@ class Benchmark:
                 entry_id = xml_entry.attrib['eid']
                 category = xml_entry.attrib['category']
                 size = xml_entry.attrib['size']
-                shape = xml_entry.attrib['shape']
-                shape_type = xml_entry.attrib['shape_type']
 
-                entry = Entry(category, size, entry_id, shape, shape_type)
+                entry = Entry(category, size, entry_id)
                 for child in xml_entry:
                     if child.tag == 'originaltripleset':
                         entry.fill_originaltriple(child)
@@ -158,10 +135,6 @@ class Benchmark:
                         entry.fill_modifiedtriple(child)
                     elif child.tag == 'lex':
                         entry.create_lex(child)
-                    elif child.tag == 'dbpedialinks':
-                        entry.create_dbpedialinks(child)
-                    elif child.tag == 'links':
-                        entry.create_links(child)
                 self.entries.append(entry)
 
     def total_lexcount(self):
@@ -316,8 +289,6 @@ class Benchmark:
             orig_triplesets['originaltripleset'] = []
             modif_tripleset = []
             lexs = []
-            links = []
-            dbpedialinks = []
             for otripleset in entry.originaltripleset:
                 orig_tripleset = []
                 for triple in otripleset.triples:
@@ -328,23 +299,12 @@ class Benchmark:
                 modif_tripleset.append({'subject': triple.s, 'property': triple.p, 'object': triple.o})
 
             for lex in entry.lexs:
-                lexs.append({'comment': lex.comment, 'xml_id': lex.id, 'lex': lex.lex, 'lang': lex.lang})
-
-            if entry.dbpedialinks:
-                for link in entry.dbpedialinks:
-                    dbpedialinks.append({'subject': link.s, 'property': link.p, 'object': link.o})
-
-            if entry.links:
-                for link in entry.links:
-                    links.append({'subject': link.s, 'property': link.p, 'object': link.o})
+                lexs.append({'comment': lex.comment, 'xml_id': lex.id, 'lex': lex.lex})
 
             data['entries'].append({entry_id: {'category': entry.category, 'size': entry.size, 'xml_id': entry.id,
-                                               'shape': entry.shape, 'shape_type': entry.shape_type,
                                                'originaltriplesets': orig_triplesets,
                                                'modifiedtripleset': modif_tripleset,
-                                               'lexicalisations': lexs,
-                                               'dbpedialinks': dbpedialinks,
-                                               'links': links}
+                                               'lexicalisations': lexs}
                                     })
 
         with open(path + '/' + filename, 'w+', encoding='utf8') as outfile:
@@ -358,8 +318,7 @@ class Benchmark:
             if recalc_id:
                 entry.id = str(index + 1)
             entry_xml = Et.SubElement(entries_xml, 'entry',
-                                      attrib={'category': entry.category, 'eid': entry.id, 'size': entry.size,
-                                              'shape': entry.shape, 'shape_type': entry.shape_type})
+                                      attrib={'category': entry.category, 'eid': entry.id, 'size': entry.size})
             for otripleset in entry.originaltripleset:
                 otripleset_xml = Et.SubElement(entry_xml, 'originaltripleset')
                 for triple in otripleset.triples:
@@ -370,19 +329,8 @@ class Benchmark:
                 mtriple_xml = Et.SubElement(mtripleset_xml, 'mtriple')
                 mtriple_xml.text = mtriple.s + ' | ' + mtriple.p + ' | ' + mtriple.o
             for lex in entry.lexs:
-                lex_xml = Et.SubElement(entry_xml, 'lex', attrib={'comment': lex.comment, 'lid': lex.id,
-                                                                  'lang': lex.lang})
+                lex_xml = Et.SubElement(entry_xml, 'lex', attrib={'comment': lex.comment, 'lid': lex.id})
                 lex_xml.text = lex.lex
-            if entry.dbpedialinks:
-                dbpedialinks_xml = Et.SubElement(entry_xml, 'dbpedialinks')
-                for link in entry.dbpedialinks:
-                    dbpedialink_xml = Et.SubElement(dbpedialinks_xml, 'dbpedialink', attrib={'direction': 'en2ru'})
-                    dbpedialink_xml.text = link.s + ' | ' + link.p + ' | ' + link.o
-            if entry.links:
-                links_xml = Et.SubElement(entry_xml, 'links')
-                for link in entry.links:
-                    link_xml = Et.SubElement(links_xml, 'link', attrib={'direction': 'en2ru'})
-                    link_xml.text = link.s + ' | ' + link.p + ' | ' + link.o
 
         ugly_xml_string = Et.tostring(root, encoding='utf-8', method='xml')
         xml = minidom.parseString(ugly_xml_string).toprettyxml(indent='  ')
