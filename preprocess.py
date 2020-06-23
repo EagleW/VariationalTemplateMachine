@@ -88,6 +88,7 @@ def convert_dataset_test(pair_src, pair_tgt, b):
     wf_tgt = open(pair_tgt, 'w')
     for entry in tqdm(b.entries):
         entities = {}
+        all_e = []
         majority = Counter()
 
         triples = entry.list_triples()
@@ -103,12 +104,14 @@ def convert_dataset_test(pair_src, pair_tgt, b):
             majority[h] += 1
             entities[' '.join(word_tokenize(h.replace('_', ' ')))] = h
             entities[' '.join(word_tokenize(r.replace('_', ' ')))] = r
+            all_e.append(h)
+            all_e.append(r)
         tgt = process_tgt_test(entities, entry.lexs)
         if tgt == 0:
             continue
         src = process_src(cur_triples, majority.most_common(1)[0][0])
         wf_src.write(src + '\n')
-        wf_tgt.write(json.dumps(tgt) + '\n')
+        wf_tgt.write(json.dumps([tgt, all_e]) + '\n')
     wf_tgt.close()
     wf_src.close()
 

@@ -2,6 +2,7 @@ import pickle
 import collections
 import sys
 import json
+from collections import Counter
 sys.path.append('pycocoevalcap')
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.rouge.rouge import Rouge
@@ -80,19 +81,32 @@ class Evaluate(object):
 def get_ref(path='data/webnlg/test_refs.txt'):
     i = 0
     refs = {}
+    entities = {}
     with open(path, 'r') as f:
         for line in f:
-            refs[i] = json.loads(line.rstrip())
+            data = json.loads(line.rstrip())
+            refs[i] = data[0]
+            entities[i] = data[1]
             i += 1
-    return refs
+    return refs, entities
 
-def get_cand(path='result.txt'):
+def get_cand(entities, path='result.txt'):
     i = 0
+    j = 0
     cands = {}
+    majority = Counter()
     with open(path, 'r') as f:
         for line in f:
-            cands[i] = line.rstrip()
             i += 1
+            text = line.rstrip()
+            if i % 6 == 0:
+                text = majority.most_common(1)[0][0]
+                cands[j] = text
+                j += 1
+            else:
+                for e in entities[j]:
+                    if e in text:
+                        majority[text] += 1
     return cands
 
 
@@ -100,7 +114,7 @@ if __name__ == '__main__':
     # cand = {'generated_description1': 'how are you', 'generated_description2': 'Hello how are you'}
     # ref = {'generated_description1': ['what are you', 'where are you'],
     #        'generated_description2': ['Hello how are you', 'Hello how is your day']}
-    ref = get_ref()
-    cand = get_cand()
+    ref, entities = get_ref()
+    cand = get_cand(entities)
     x = Evaluate()
     x.evaluate(live=True, cand=cand, ref=ref)
