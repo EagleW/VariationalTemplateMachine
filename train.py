@@ -368,7 +368,7 @@ if __name__ == "__main__":
 
             total_loss, all_loss_dict = net(paired_src_feat, paired_mask, pair_sentence,
                                                     paired_skeleton_sent, paired_sentence_mask,
-                                                    aw_sentence, raw_sentence_mask, valid=False)
+                                                    raw_sentence, raw_sentence_mask, valid=False)
 
             # total_loss, all_loss_dict = net(Variable(paired_src_feat), Variable(paired_mask), Variable(pair_sentence),
             #                                         Variable(paired_skeleton_sent), Variable(paired_genbow), Variable(paired_vbow), Variable(paired_sentence_mask),
