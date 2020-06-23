@@ -101,6 +101,7 @@ def get_cand(entities, path='result.txt'):
             text = line.rstrip()
             if i % 6 == 0:
                 text = majority.most_common(1)[0][0]
+                majority = Counter()
                 cands[j] = text
                 j += 1
             else:
