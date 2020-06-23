@@ -4,7 +4,6 @@ from collections import defaultdict
 import numpy as np
 import torch
 import torch.optim as optim
-from torch.autograd import Variable
 from data_utils import label_wiki, label_spnlg
 from models.variational_template_machine import VariationalTemplateMachine
 import random
@@ -61,15 +60,15 @@ def make_masks(src, pad_idx, max_pool=False):
     """
     neginf = -1e38
     bsz, nfields, nfeats = src.size()
-    fieldmask = (src.eq(pad_idx).sum(2) == nfeats) # binary bsz x nfields tensor
-    avgmask = (1 - fieldmask).float() # 1s where not padding
+    fieldmask = (src.eq(pad_idx).sum(2) == nfeats).float() # binary bsz x nfields tensor
+    avgmask = (1 - fieldmask) # 1s where not padding
     if not max_pool:
         avgmask.div_(avgmask.sum(1, True).expand(bsz, nfields))
     fieldmask = fieldmask.float() * neginf # 0 where not all pad and -1e38 elsewhere
     return fieldmask, avgmask
 
 def make_sent_msk(sentence, pad_idx):
-    return torch.ByteTensor(sentence != pad_idx).transpose(0, 1)
+    return (sentence != pad_idx).transpose(0, 1)
 
 
 parser = argparse.ArgumentParser(description='')
@@ -171,7 +170,8 @@ if __name__ == "__main__":
             print("No CUDA device.")
             args.cuda = False
 
-    if 'wiki' in args.data.lower():
+    # if 'wiki' in args.data.lower():
+    if 'nlg' in args.data.lower():
         corpus = label_wiki.Corpus(args.data, args.bsz, max_count=args.max_vocab_cnt,
                                    add_bos=False, add_eos=False)
     elif 'spnlg' in args.data.lower():
@@ -229,15 +229,15 @@ if __name__ == "__main__":
                 paired_src_feat, paired_mask = paired_src_feat.cuda(), paired_mask.cuda()
                 sentence, paired_skeleton_sent, sentence_mask = sentence.cuda(), paired_skeleton_sent.cuda(), sentence_mask.cuda()
 
-            paired_table_enc = net.encode_table(Variable(paired_src_feat), Variable(paired_mask))
+            paired_table_enc = net.encode_table(paired_src_feat, paired_mask)
 
             tot_steps += 1
             if hasattr(net, 'set_kl_weight'):
                 net.set_kl_weight(tot_steps)
 
-            paired_loss_dict = net.decode_pair(paired_table_enc, Variable(sentence),
-                                               Variable(paired_skeleton_sent), Variable(paired_mask),
-                                               Variable(sentence_mask), valid=False)
+            paired_loss_dict = net.decode_pair(paired_table_enc, sentence,
+                                               paired_skeleton_sent, paired_mask,
+                                               sentence_mask, valid=False)
             loss = paired_loss_dict['pair_loss']
             loss.backward()
             torch.nn.utils.clip_grad_norm_(net.parameters(), args.clip)
@@ -291,7 +291,7 @@ if __name__ == "__main__":
                 raw_sentence, raw_sentlen = raw_sentence.cuda(), raw_sentlen.cuda()
                 sentence_mask = sentence_mask.cuda()
 
-            raw_loss_dict = net.decode_raw(Variable(raw_sentence), Variable(sentence_mask), valid=False)
+            raw_loss_dict = net.decode_raw(raw_sentence, sentence_mask, valid=False)
             # raw_loss_dict = net.decode_raw(Variable(raw_sentence), Variable(raw_genbow), Variable(raw_vbow), Variable(sentence_mask), valid=False)
 
             loss = raw_loss_dict['raw_loss']
@@ -366,11 +366,11 @@ if __name__ == "__main__":
             if hasattr(net, 'set_kl_weight'):
                 net.set_kl_weight(tot_steps)
 
-            total_loss, all_loss_dict = net.forward(Variable(paired_src_feat), Variable(paired_mask), Variable(pair_sentence),
-                                                    Variable(paired_skeleton_sent), Variable(paired_sentence_mask),
-                                                    Variable(raw_sentence), Variable(raw_sentence_mask), valid=False)
+            total_loss, all_loss_dict = net(paired_src_feat, paired_mask, pair_sentence,
+                                                    paired_skeleton_sent, paired_sentence_mask,
+                                                    aw_sentence, raw_sentence_mask, valid=False)
 
-            # total_loss, all_loss_dict = net.forward(Variable(paired_src_feat), Variable(paired_mask), Variable(pair_sentence),
+            # total_loss, all_loss_dict = net(Variable(paired_src_feat), Variable(paired_mask), Variable(pair_sentence),
             #                                         Variable(paired_skeleton_sent), Variable(paired_genbow), Variable(paired_vbow), Variable(paired_sentence_mask),
             #                                         Variable(raw_sentence), Variable(raw_genbow), Variable(raw_vbow), Variable(raw_sentence_mask),
             #                                         valid=False)

@@ -380,7 +380,7 @@ class VariationalTemplateMachine(nn.Module):
 
             crossEntropy = -torch.log(
                 torch.gather(temp_seq_prob, -1, template_sent.view(temp_seqlen, bsz, 1)) + 1e-15)  # seqlen x b x 1
-            temp_mask = torch.ByteTensor(template_sent.cpu() != self.pad_idx).transpose(0, 1)
+            temp_mask = (template_sent.cpu() != self.pad_idx).transpose(0, 1)
             if self.use_cuda:
                 temp_mask = temp_mask.cuda()
             pt_loss = crossEntropy.masked_select(temp_mask).mean()

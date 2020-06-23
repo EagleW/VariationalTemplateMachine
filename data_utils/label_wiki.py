@@ -17,12 +17,12 @@ def get_wiki_poswrds(tokes):
         if val == "<none>":
             continue
         keypieces = fullkey.split('_')
-        if len(keypieces) == 1:
-            key = fullkey
-            keynum = 1
-        else:
-            keynum = int(keypieces[-1])
-            key = '_'.join(keypieces[:-1])
+        # if len(keypieces) == 1:
+        key = fullkey
+        keynum = 1
+        # else:
+        #     keynum = int(keypieces[-1])
+        #     key = '_'.join(keypieces[:-1])
         fields[key, keynum] = val
     return fields
 
