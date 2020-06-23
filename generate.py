@@ -5,6 +5,7 @@ import torch
 from data_utils import label_wiki, label_spnlg
 from models import variational_template_machine
 import os
+from tqdm import tqdm, trange
 
 def make_masks(src, pad_idx, max_pool=False):
     """
@@ -111,7 +112,7 @@ if __name__ == "__main__":
         # read source table
         table_path = os.path.join(args.data, "src_test.txt")
         paired_src_feat_tst, origin_src_tst, lineno_tst = corpus.get_test_data(table_path)
-        for i in range(len(paired_src_feat_tst)):
+        for i in trange(len(paired_src_feat_tst)):
             paired_src_feat = paired_src_feat_tst[i]
             for j in range(num):
                 if j == 0:

@@ -1,7 +1,7 @@
 import pickle
 import collections
 import sys
-
+import json
 sys.path.append('pycocoevalcap')
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.rouge.rouge import Rouge
@@ -77,10 +77,30 @@ class Evaluate(object):
         if get_scores:
             return final_scores
 
+def get_ref(path='data/webnlg/test_refs.txt'):
+    i = 0
+    refs = {}
+    with open(path, 'r') as f:
+        for line in f:
+            refs[i] = json.loads(line.rstrip())
+            i += 1
+    return refs
+
+def get_cand(path='result.txt'):
+    i = 0
+    cands = {}
+    with open(path, 'r') as f:
+        for line in f:
+            cands[i] = line.rstrip()
+            i += 1
+    return cands
+
 
 if __name__ == '__main__':
-    cand = {'generated_description1': 'how are you', 'generated_description2': 'Hello how are you'}
-    ref = {'generated_description1': ['what are you', 'where are you'],
-           'generated_description2': ['Hello how are you', 'Hello how is your day']}
+    # cand = {'generated_description1': 'how are you', 'generated_description2': 'Hello how are you'}
+    # ref = {'generated_description1': ['what are you', 'where are you'],
+    #        'generated_description2': ['Hello how are you', 'Hello how is your day']}
+    ref = get_ref()
+    cand = get_cand()
     x = Evaluate()
     x.evaluate(live=True, cand=cand, ref=ref)
