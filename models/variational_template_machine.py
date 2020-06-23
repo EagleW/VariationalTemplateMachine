@@ -254,7 +254,7 @@ class VariationalTemplateMachine(nn.Module):
         key_emb = embs[:, :2, :].view(bsz, nfields, -1, emb_size) # b x nfield x 2 x emb
         value_emb = embs[:, 2:, :].view(bsz, nfields, -1, emb_size).squeeze(2) # b x nfield x emb
 
-        h_table_field = F.tanh(self.table_hidden_out(embs.view(-1, nfeats*emb_size))).view(bsz, nfields, -1) # b x nfield x hidden
+        h_table_field = torch.tanh(self.table_hidden_out(embs.view(-1, nfeats*emb_size))).view(bsz, nfields, -1) # b x nfield x hidden
 
         fieldmask[fieldmask == 0] = 1
         fieldmask = fieldmask.unsqueeze(2).expand(bsz, nfields, emb_size).unsqueeze(2).expand(bsz, nfields, 2, emb_size) # b x nfield x 2 x emb
@@ -479,7 +479,7 @@ class VariationalTemplateMachine(nn.Module):
         else:
             dec_outs = self.generator_out(states)
 
-        seq_prob = F.softmax(dec_outs)  # seq x b x vocab
+        seq_prob = F.softmax(dec_outs, dim=-1)  # seq x b x vocab
 
         # nll loss
         crossEntropy = -torch.log(torch.gather(seq_prob, -1, sentence.view(seqlen, bsz, 1)) + 1e-15)  # seqlen x b x 1
