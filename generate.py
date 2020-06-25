@@ -75,7 +75,10 @@ if __name__ == "__main__":
             args.cuda = False
 
     # data loader
-    if 'webnlg' in args.data.lower():
+    if 'wiki' in args.data.lower():
+        corpus = label_wiki.Corpus(args.data, args.bsz, max_count=args.max_vocab_cnt,
+                                   add_bos=False, add_eos=False)
+    elif 'webnlg' in args.data.lower():
         corpus = label_wiki.Corpus(args.data, args.bsz, max_count=args.max_vocab_cnt,
                                    add_bos=False, add_eos=False)
     elif 'spnlg' in args.data.lower():

@@ -105,17 +105,72 @@ def get_cand(entities, path='result.txt'):
                 cands[j] = text
                 j += 1
             else:
+                majority[text] += 1
+                for e in entities[j]:
+                    if e in text:
+                        majority[text] += 1
+    return cands
+
+def get_ref_1(path='data/Wiki/test_refs.txt'):
+    i = 0
+    j = 0
+    refs = {}
+    with open(path, 'r') as f:
+        for line in f:
+            if i%2 == 0:
+                refs[j] = [line.rstrip()]
+                j+= 1
+            i += 1
+    return refs
+
+def get_cand_1(entities, path='result.txt'):
+    i = 0
+    j = 0
+    cands = {}
+    majority = Counter()
+    with open(path, 'r') as f:
+        for line in f:
+            i += 1
+            text = line.rstrip()
+            if i % 6 == 0:
+                text = majority.most_common(1)[0][0]
+                majority = Counter()
+                cands[j] = text
+                j += 1
+            else:
+                majority[text] += 1
                 for e in entities[j]:
                     if e in text:
                         majority[text] += 1
     return cands
 
 
+def get_entities(path='data/Wiki/src_test.txt'):
+    entities = {}
+    i = 0
+    with open(path, 'r') as f:
+        for line in f:
+            tmp = []
+            text = line.rstrip()
+            for ee in text.split('\t'):
+                _, _, e = ee.partition(':')
+                if e != '<none>':
+                    tmp.append(e)
+            entities[i] = tmp
+            i += 1
+    return entities
+
+
+
+
 if __name__ == '__main__':
     # cand = {'generated_description1': 'how are you', 'generated_description2': 'Hello how are you'}
     # ref = {'generated_description1': ['what are you', 'where are you'],
     #        'generated_description2': ['Hello how are you', 'Hello how is your day']}
-    ref, entities = get_ref()
-    cand = get_cand(entities)
+    ref = get_ref_1()
+    entities = get_entities()
+    cand = get_cand_1(entities)
+    # ref, entities = get_ref()
+    # cand = get_cand(entities)
     x = Evaluate()
     x.evaluate(live=True, cand=cand, ref=ref)
