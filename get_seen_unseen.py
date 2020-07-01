@@ -43,7 +43,7 @@ def convert_dataset_test(pair_src, pair_tgt, b):
         eids.append(entry.id)
         src = process_src(cur_triples)
         wf_src.write(src + '\n')
-        wf_tgt.write(json.dumps([tgt]) + '\n')
+        wf_tgt.write(json.dumps(tgt) + '\n')
     wf_tgt.close()
     wf_src.close()
     return eids
@@ -68,7 +68,7 @@ def convert_dataset_test_1(pair_src, pair_tgt, b, eids):
         tgt = process_tgt_test(entry.lexs)
         src = process_src(cur_triples)
         wf_src.write(src + '\n')
-        wf_tgt.write(json.dumps([tgt]) + '\n')
+        wf_tgt.write(json.dumps(tgt) + '\n')
     wf_tgt.close()
     wf_src.close()
     return eids
