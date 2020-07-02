@@ -9,6 +9,9 @@ from tqdm import tqdm
 def process_src(triples):
     src = ''
     for h, r, t in triples:
+        h = ' '.join(word_tokenize(h))
+        r = ' '.join(word_tokenize(r))
+        t = ' '.join(word_tokenize(t))
         src += 'S| ' + h + ' P| ' + r + ' O| ' + t + ' '
     return src[:-1]
 
