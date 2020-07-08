@@ -77,7 +77,7 @@ def convert_dataset_test_1(pair_src, pair_tgt, b, eids):
     return eids
 
 
-outdir = 'data/webnlg'
+outdir = 'data'
 
 b = Benchmark()
 files = [('webnlg_challenge_2017/test', 'testdata_unseen_with_lex.xml')]
