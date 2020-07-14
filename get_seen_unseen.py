@@ -92,3 +92,9 @@ a.fill_benchmark(files)
 pair_valid_src = os.path.join(outdir, "seen.source")
 pair_valid_tgt = os.path.join(outdir, "seen.target")
 eids = convert_dataset_test_1(pair_valid_src, pair_valid_tgt, a, eids)
+
+
+files =[('webnlg_challenge_2017/test', 'testdata_with_lex.xml')]
+pair_valid_src = os.path.join(outdir, "test.source")
+pair_valid_tgt = os.path.join(outdir, "test.target")
+eids = convert_dataset_test(pair_valid_src, pair_valid_tgt, a)
