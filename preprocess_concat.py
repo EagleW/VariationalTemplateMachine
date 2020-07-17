@@ -3,16 +3,17 @@ import os, json
 from collections import Counter
 from benchmark_reader import select_files
 import spacy
+from nltk import word_tokenize
 from tqdm import tqdm
 
 
-nlp = spacy.load("en_core_web_sm")
-def word_tokenize(txt):
-    words = []
-    doc = nlp(txt)
-    for token in doc:
-        words.append(token.text)
-    return words
+# nlp = spacy.load("en_core_web_sm")
+# def word_tokenize(txt):
+#     words = []
+#     doc = nlp(txt)
+#     for token in doc:
+#         words.append(token.text)
+#     return words
 
 
 def process_src(triples):
@@ -98,8 +99,8 @@ b = Benchmark()
 files = select_files('webnlg_challenge_2017/dev')
 b.fill_benchmark(files)
 
-pair_valid_src = os.path.join(outdir, "valid.source")
-pair_valid_tgt = os.path.join(outdir, "valid.target")
+pair_valid_src = os.path.join(outdir, "val.source")
+pair_valid_tgt = os.path.join(outdir, "val.target")
 convert_dataset(pair_valid_src, pair_valid_tgt, b)
 
 
