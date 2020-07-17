@@ -2,9 +2,17 @@ from benchmark_reader import Benchmark
 import os, json
 from collections import Counter
 from benchmark_reader import select_files
-from nltk import word_tokenize
+import spacy
 from tqdm import tqdm
 
+
+nlp = spacy.load("en_core_web_sm")
+def word_tokenize(txt):
+    words = []
+    doc = nlp(txt)
+    for token in doc:
+        words.append(token.text)
+    return words
 
 def process_src(triples):
     src = ''
@@ -93,7 +101,7 @@ pair_valid_src = os.path.join(outdir, "seen.source")
 pair_valid_tgt = os.path.join(outdir, "seen.target")
 eids = convert_dataset_test_1(pair_valid_src, pair_valid_tgt, a, eids)
 
-files =[('webnlg_challenge_2017/test', 'testdata_with_lex.xml')]
-pair_valid_src = os.path.join(outdir, "test.source")
-pair_valid_tgt = os.path.join(outdir, "test.target")
-eids = convert_dataset_test(pair_valid_src, pair_valid_tgt, a)
+# files =[('webnlg_challenge_2017/test', 'testdata_with_lex.xml')]
+# pair_valid_src = os.path.join(outdir, "test.source")
+# pair_valid_tgt = os.path.join(outdir, "test.target")
+# eids = convert_dataset_test(pair_valid_src, pair_valid_tgt, a)

@@ -2,94 +2,41 @@ from benchmark_reader import Benchmark
 import os, json
 from collections import Counter
 from benchmark_reader import select_files
-from nltk import word_tokenize
+import spacy
 from tqdm import tqdm
 
-def process_src(triples, majority):
-    src = 'name:' + majority + '\t'
-    # count = 2+ str(count) 
+
+nlp = spacy.load("en_core_web_sm")
+def word_tokenize(txt):
+    words = []
+    doc = nlp(txt)
+    for token in doc:
+        words.append(token.text)
+    return words
+
+
+def process_src(triples):
+    src = ''
     for h, r, t in triples:
-        if h != majority:
-            src += h + '_' + r + ':' + t + '\t'
-        else:
-            src += r + ':' + t + '\t'
-        # count += 1
-    return src
+        h = ' '.join(word_tokenize(h))
+        r = ' '.join(word_tokenize(r))
+        t = ' '.join(word_tokenize(t))
+        src += 'S| ' + h + ' P| ' + r + ' O| ' + t + ' '
+    return src[:-1]
 
 
 
-def process_tgt(entities, texts):
-    majority = Counter()
-    for text in texts:
-        for e in entities:
-            if e in text.lex:
-                majority[text.lex] += 1
-    if len(majority) == 0:
-        return 0
-    text = majority.most_common(1)[0][0]
-    tgt = word_tokenize(text)
-    text = ' '.join(tgt) + ' <eos>|||\n'
-    for e in entities:
-        text = text.replace(e, entities[e])
-    return  text
-
-def process_tgt_test(entities, texts):
-    majority = Counter()
-    for text in texts:
-        for e in entities:
-            if e in text.lex:
-                majority[text.lex] += 1
-    if len(majority) == 0:
-        return 0
+def process_tgt_test(tgts):
     texts = []
-    num = majority.most_common(1)[0][1]
-    for text, i in majority.most_common():
-        if i == num:
-            tgt = word_tokenize(text)
-            text = ' '.join(tgt)
-            for e in entities:
-                text = text.replace(e, entities[e])
-            texts.append(text)
-        else:
-            break
+    for text in tgts:
+        tgt = word_tokenize(text.lex)
+        texts.append(' '.join(tgt))
     return  texts
-
-def convert_dataset(pair_src, pair_tgt, b):
-    wf_src = open(pair_src, 'w')
-    wf_tgt = open(pair_tgt, 'w')
-    for entry in tqdm(b.entries):
-        entities = {}
-        majority = Counter()
-
-        triples = entry.list_triples()
-        if len(triples) == 0:
-            continue
-        cur_triples = []
-        for triple in triples:
-            h, r, t = triple.split(' | ')
-            h = h.replace('"', '')
-            t = t.replace('"', '')
-            r = r.replace('"', '')
-            cur_triples.append((h,r.replace(' ', '_'),t))
-            majority[h] += 1
-            entities[' '.join(word_tokenize(h.replace('_', ' ')))] = h
-            entities[' '.join(word_tokenize(r.replace('_', ' ')))] = r
-        tgt = process_tgt(entities, entry.lexs)
-        if tgt == 0:
-            continue
-        src = process_src(cur_triples, majority.most_common(1)[0][0])
-        wf_src.write(src + '\n')
-        wf_tgt.write(tgt)
-    wf_tgt.close()
-    wf_src.close()
 
 def convert_dataset_test(pair_src, pair_tgt, b):
     wf_src = open(pair_src, 'w')
     wf_tgt = open(pair_tgt, 'w')
     for entry in tqdm(b.entries):
-        entities = {}
-        all_e = []
-        majority = Counter()
 
         triples = entry.list_triples()
         if len(triples) == 0:
@@ -97,46 +44,43 @@ def convert_dataset_test(pair_src, pair_tgt, b):
         cur_triples = []
         for triple in triples:
             h, r, t = triple.split(' | ')
-            h = h.replace('"', '')
-            t = t.replace('"', '')
-            r = r.replace('"', '')
-            cur_triples.append((h,r.replace(' ', '_'),t))
-            majority[h] += 1
-            entities[' '.join(word_tokenize(h.replace('_', ' ')))] = h
-            entities[' '.join(word_tokenize(r.replace('_', ' ')))] = r
-            all_e.append(h)
-            all_e.append(r)
-        tgt = process_tgt_test(entities, entry.lexs)
+            h = h.replace('"', '').replace('_', ' ')
+            t = t.replace('"', '').replace('_', ' ')
+            r = r.replace('"', '').replace('_', ' ')
+            cur_triples.append((h,r,t))
+        tgt = process_tgt_test(entry.lexs)
         if tgt == 0:
             continue
-        src = process_src(cur_triples, majority.most_common(1)[0][0])
+        src = process_src(cur_triples)
         wf_src.write(src + '\n')
-        wf_tgt.write(json.dumps([tgt, all_e]) + '\n')
+        wf_tgt.write(json.dumps(tgt) + '\n')
     wf_tgt.close()
     wf_src.close()
 
 
-outdir = 'data/webnlg'
+
+outdir = 'data/webnlg_tag'
 b = Benchmark()
 files = select_files('webnlg_challenge_2017/train')
 b.fill_benchmark(files)
 
-pair_train_src = os.path.join(outdir, "pair_src.train")
-pair_train_tgt = os.path.join(outdir, "pair_tgt.train")
-convert_dataset(pair_train_src, pair_train_tgt, b)
+pair_train_src = os.path.join(outdir, "train.source")
+pair_train_tgt = os.path.join(outdir, "train.target")
+convert_dataset_test(pair_train_src, pair_train_tgt, b)
 
 b = Benchmark()
 files = select_files('webnlg_challenge_2017/dev')
 b.fill_benchmark(files)
 
-pair_valid_src = os.path.join(outdir, "pair_src.valid")
-pair_valid_tgt = os.path.join(outdir, "pair_tgt.valid")
-convert_dataset(pair_valid_src, pair_valid_tgt, b)
+pair_valid_src = os.path.join(outdir, "valid.source")
+pair_valid_tgt = os.path.join(outdir, "valid.target")
+convert_dataset_test(pair_valid_src, pair_valid_tgt, b)
+
 
 b = Benchmark()
-files = [('webnlg_challenge_2017/test', 'testdata_unseen_with_lex.xml'), ('webnlg_challenge_2017/test', 'testdata_with_lex.xml')]
+files = [('webnlg_challenge_2017/test', 'testdata_with_lex.xml')]
 b.fill_benchmark(files)
 
-pair_valid_src = os.path.join(outdir, "src_test.txt")
-pair_valid_tgt = os.path.join(outdir, "test_refs.txt")
+pair_valid_src = os.path.join(outdir, "test.source")
+pair_valid_tgt = os.path.join(outdir, "test.target")
 convert_dataset_test(pair_valid_src, pair_valid_tgt, b)
