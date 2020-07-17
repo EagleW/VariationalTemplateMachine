@@ -92,7 +92,7 @@ b.fill_benchmark(files)
 
 pair_train_src = os.path.join(outdir, "train.source")
 pair_train_tgt = os.path.join(outdir, "train.target")
-convert_dataset_test(pair_train_src, pair_train_tgt, b)
+convert_dataset(pair_train_src, pair_train_tgt, b)
 
 b = Benchmark()
 files = select_files('webnlg_challenge_2017/dev')
@@ -100,7 +100,7 @@ b.fill_benchmark(files)
 
 pair_valid_src = os.path.join(outdir, "valid.source")
 pair_valid_tgt = os.path.join(outdir, "valid.target")
-convert_dataset_test(pair_valid_src, pair_valid_tgt, b)
+convert_dataset(pair_valid_src, pair_valid_tgt, b)
 
 
 b = Benchmark()
