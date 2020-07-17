@@ -49,7 +49,7 @@ def convert_dataset_test(pair_src, pair_tgt, b):
             r = r.replace('"', '').replace('_', ' ')
             cur_triples.append((h,r,t))
         tgt = process_tgt_test(entry.lexs)
-        if tgt == 0:
+        if len(tgt) == 0:
             continue
         eids.append(entry.id)
         src = process_src(cur_triples)

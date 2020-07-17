@@ -33,6 +33,32 @@ def process_tgt_test(tgts):
         texts.append(' '.join(tgt))
     return  texts
 
+
+def convert_dataset(pair_src, pair_tgt, b):
+    wf_src = open(pair_src, 'w')
+    wf_tgt = open(pair_tgt, 'w')
+    for entry in tqdm(b.entries):
+
+        triples = entry.list_triples()
+        if len(triples) == 0:
+            continue
+        cur_triples = []
+        for triple in triples:
+            h, r, t = triple.split(' | ')
+            h = h.replace('"', '').replace('_', ' ')
+            t = t.replace('"', '').replace('_', ' ')
+            r = r.replace('"', '').replace('_', ' ')
+            cur_triples.append((h,r,t))
+        tgt = process_tgt_test(entry.lexs)
+        if len(tgt) == 0:
+            continue
+        src = process_src(cur_triples)
+        for tg in tgt:
+            wf_src.write(src + '\n')
+            wf_tgt.write(tg + '\n')
+    wf_tgt.close()
+    wf_src.close()
+
 def convert_dataset_test(pair_src, pair_tgt, b):
     wf_src = open(pair_src, 'w')
     wf_tgt = open(pair_tgt, 'w')
@@ -49,7 +75,7 @@ def convert_dataset_test(pair_src, pair_tgt, b):
             r = r.replace('"', '').replace('_', ' ')
             cur_triples.append((h,r,t))
         tgt = process_tgt_test(entry.lexs)
-        if tgt == 0:
+        if len(tgt) == 0:
             continue
         src = process_src(cur_triples)
         wf_src.write(src + '\n')
